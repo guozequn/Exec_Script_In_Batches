@@ -7,21 +7,28 @@ import json
 import requests
 import ansible.runner
 
-class cl:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
-def multi_run():
+class cl:
+
+   HEADER = '\033[95m'
+   OKBLUE = '\033[94m'
+   OKGREEN = '\033[92m'
+   WARNING = '\033[93m'
+   FAIL = '\033[91m'
+   ENDC = '\033[0m'
+   BOLD = '\033[1m'
+
+def multi_run(**kwargs):
+    if 'module_name' not in dir():
+        module_name = "script"
+    if 'module_args' not in dir():
+        module_args = SCRIPT
+    if 'host_list' not in dir():
+        host_list = IPFILE
     runner = ansible.runner.Runner(
-            host_list=IPFILE,
-            module_name="script",
-            module_args=SCRIPT,
+            host_list=host_list,
+            module_name=module_name,
+            module_args=module_args,
             pattern="",
             forks=50,
             become="True",
@@ -37,8 +44,6 @@ def write_log(data):
     if LOGPATH:
         with open('LOGPATH', 'a') as f:
             f.write(data)
-
-
 
 
 def process(data):
@@ -59,6 +64,15 @@ def process(data):
             res['Success'] = ret
             print json.dumps(res['Success'], indent=4).replace("\\r\\n","\n\t\t")
 
+def re_confirm():
+    """
+    可扩展从CMDB中取服务器信息来确认是否是如下机器.
+    """
+    data = multi_run(module_name="shell",module_args="hostname")
+    process(data)
+    u_input = raw_input("Sure to exec: [Y/N]")
+    print u_input
+    sys.exit(0)
 
 
 if __name__ == '__main__':
@@ -67,9 +81,10 @@ if __name__ == '__main__':
         IPFILE=sys.argv[2]
         PRIKEY=''
         LOGPATH=''
+        #re_confirm()
         data = multi_run()
         process(data)
     else:
-        print cl.BOLD + "Usage: ./check.py command.sh ip.list" + cl.ENDC
+        print cl.WARNING + "Usage: ./check.py command.sh ip.list" + cl.ENDC
         sys.exit(1)
 
