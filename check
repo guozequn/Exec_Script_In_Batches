@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-import ansible.runner
-import json
-import re
-import copy
+import os
 import sys
+import json
 import requests
+import ansible.runner
 
-SCRIPT=sys.argv[1]
-IPFILE=sys.argv[2]
-PRIKEY=''
-LOGPATH=''
+class cl:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 def multi_run():
     runner = ansible.runner.Runner(
@@ -36,16 +40,36 @@ def write_log(data):
 
 
 
+
+def process(data):
+    if type(data) is dict:
+        res = {}
+        if data['dark']:
+            ret = {}
+            print cl.FAIL + "Failure:" + cl.ENDC
+            for k,v in data['dark'].items():
+                ret[k] = v['msg'].strip()
+            res['Failure'] = ret
+            print json.dumps(res['Failure'], indent=4).replace('\\r\\n','\n\t\t')
+        if data['contacted']:
+            ret = {}
+            print cl.OKBLUE + "Success:" + cl.ENDC
+            for k,v in data['contacted'].items():
+                ret[k] = v['stdout'].strip()
+            res['Success'] = ret
+            print json.dumps(res['Success'], indent=4).replace("\\r\\n","\n\t\t")
+
+
+
 if __name__ == '__main__':
     if len(sys.argv) == 3:
+        SCRIPT=sys.argv[1]
+        IPFILE=sys.argv[2]
+        PRIKEY=''
+        LOGPATH=''
         data = multi_run()
-        print data
-        #ret = {}
-        #for k,v in data['contacted'].items():
-        #    ret[k] = v['stdout'].split(',')
-        #    print(json.dumps(ret,indent=1).replace("\\r\\n", "\n").replace("\\t", "\t"))
+        process(data)
     else:
-        print "Usage: ./check.py command.sh ip.list"
-        print len(sys.argv)
+        print cl.BOLD + "Usage: ./check.py command.sh ip.list" + cl.ENDC
         sys.exit(1)
 
