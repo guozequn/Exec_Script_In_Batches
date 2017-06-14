@@ -1,4 +1,4 @@
-# Execute_Scripts_In_Batches
+# Execute_Script_In_Batches
 
 批量服务器执行脚本/excute script in multi servers
 
